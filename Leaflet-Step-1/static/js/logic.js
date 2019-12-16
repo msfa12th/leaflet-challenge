@@ -1,24 +1,13 @@
 // Store our API endpoint inside queryUrl
 var queryUrl = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson";
 
-function pickColor(myMag) {
-    var newColor = "";
-  
-    if (myMag <= 1) {
-        newColor = "#80ff00"; // greenish
-    } else if (myMag <= 2) {
-        newColor = "#bfff00";
-    } else if (myMag <= 3) {
-        newColor = "#ffff00"; // yellow
-    } else if (myMag <= 4) {
-        newColor = "#ffbf00";
-    } else if (myMag <= 5) {
-        newColor = "#ff8000";
-    } else { 
-        newColor = "#ff4000"; //reddish, 5+
-    }
-
-    return newColor;
+function pickColor(d) {
+  return d > 5 ? "#ff0000" : //red
+          d > 4 ? "#ff8000" :
+          d > 3 ? "#ffcd00" :
+          d > 2 ? "#ffff00" :
+          d > 1 ? "#bfff00" : 
+          "#80ff00" ; //greenish
 }
 
 function createMap(earthquakes) {
@@ -55,15 +44,12 @@ function createMap(earthquakes) {
   var legend = L.control({ position: "bottomright" });
 
   legend.onAdd = function(map) {
-    var div = L.DomUtil.create("div", "legend");
-
-    div.innerHTML += '<i style="background: #80ff00"></i><span>0-1</span><br>';
-    div.innerHTML += '<i style="background: #bfff00"></i><span>1-2</span><br>';
-    div.innerHTML += '<i style="background: #ffff00"></i><span>2-3</span><br>';
-    div.innerHTML += '<i style="background: #ffbf00"></i><span>3-4</span><br>';
-    div.innerHTML += '<i style="background: #ff8000"></i><span>4-5</span><br>';
-    div.innerHTML += '<i style="background: #ff4000"></i><span>5+</span><br>';
-
+    var div = L.DomUtil.create('div', 'info legend');
+    grades = [0,1,2,3,4,5];
+    for (var i = 0; i < grades.length; i++) {
+      div.innerHTML += '<i style="background:' + pickColor(grades[i] + 0.5) + '"></i> ' + 
+      grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+      }
     return div;
   };
 
@@ -78,14 +64,14 @@ function createFeatures(earthquakeData) {
     function onEachFeature(feature, layer) {
 
       layer.bindPopup("<h3>" + feature.properties.place + "</h3><hr" 
-      + "<p>Earthquake Magnitude = " + feature.properties.mag + "</p>"
+      + "<p>Earthquake of Magnitude = " + feature.properties.mag + "</p>"
       + "<hr><p>"  + new Date(feature.properties.time) + "</p>");
     }
 
     function createCircleMarker(feature, latlng){
         // Change the values of these options to change the symbol's appearance
         let options = {
-          radius: feature.properties.mag*2,
+          radius: feature.properties.mag*3,
           fillColor: pickColor(feature.properties.mag),
           color: "gray",
           weight: 1,
