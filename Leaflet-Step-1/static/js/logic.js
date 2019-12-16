@@ -7,7 +7,7 @@ function pickColor(myMag) {
     if (myMag <= 1) {
         newColor = "#80ff00"; // greenish
     } else if (myMag <= 2) {
-        newColor = "bfff00";
+        newColor = "#bfff00";
     } else if (myMag <= 3) {
         newColor = "#ffff00"; // yellow
     } else if (myMag <= 4) {
@@ -47,9 +47,27 @@ function createMap(earthquakes) {
     center: [
         40.7608,-111.8910
     ],
-    zoom: 5,
+    zoom: 4,
     layers: [lightMap, earthquakes]
   });
+
+  /*Legend specific*/
+  var legend = L.control({ position: "bottomright" });
+
+  legend.onAdd = function(map) {
+    var div = L.DomUtil.create("div", "legend");
+
+    div.innerHTML += '<i style="background: #80ff00"></i><span>0-1</span><br>';
+    div.innerHTML += '<i style="background: #bfff00"></i><span>1-2</span><br>';
+    div.innerHTML += '<i style="background: #ffff00"></i><span>2-3</span><br>';
+    div.innerHTML += '<i style="background: #ffbf00"></i><span>3-4</span><br>';
+    div.innerHTML += '<i style="background: #ff8000"></i><span>4-5</span><br>';
+    div.innerHTML += '<i style="background: #ff4000"></i><span>5+</span><br>';
+
+    return div;
+  };
+
+  legend.addTo(myMap);
 
 }
 
@@ -58,14 +76,31 @@ function createFeatures(earthquakeData) {
     // Define a function we want to run once for each feature in the features array
     // Give each feature a popup describing the place and time of the earthquake
     function onEachFeature(feature, layer) {
-      layer.bindPopup("<h3>" + feature.properties.place +
-        "</h3><hr><p>" + new Date(feature.properties.time) + "</p>");
+
+      layer.bindPopup("<h3>" + feature.properties.place + "</h3><hr" 
+      + "<p>Earthquake Magnitude = " + feature.properties.mag + "</p>"
+      + "<hr><p>"  + new Date(feature.properties.time) + "</p>");
+    }
+
+    function createCircleMarker(feature, latlng){
+        // Change the values of these options to change the symbol's appearance
+        let options = {
+          radius: feature.properties.mag*2,
+          fillColor: pickColor(feature.properties.mag),
+          color: "gray",
+          weight: 1,
+          opacity: 1,
+          fillOpacity: 0.8
+        };
+
+        return L.circleMarker( latlng, options );
     }
   
     // Create a GeoJSON layer containing the features array on the earthquakeData object
     // Run the onEachFeature function once for each piece of data in the array
     var earthquakes = L.geoJSON(earthquakeData, {
-      onEachFeature: onEachFeature
+        pointToLayer: createCircleMarker,
+        onEachFeature: onEachFeature
     });
   
     // Sending our earthquakes layer to the createMap function
@@ -77,3 +112,6 @@ d3.json(queryUrl, function(data) {
     // Once we get a response, send the data.features object to the createFeatures function
     createFeatures(data.features);
   });
+
+
+ 
